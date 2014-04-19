@@ -7,3 +7,6 @@
   (move [this player-actions])
   (terminal? [this])
   (score [this player-id]))
+
+(defn all-scores [game]
+  (into {} (map (fn [player] [player (score game player)]) (all-players game))))
