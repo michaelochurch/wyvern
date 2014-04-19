@@ -1,6 +1,7 @@
 (ns wyvern.nim
-  (:use wyvern.types
-        wyvern.utils))
+  (:require [wyvern.game-state :as state]
+            [wyvern.game-view  :as view])
+  (:use wyvern.utils))
 
 (defrecord State [active stones])
 
@@ -19,17 +20,35 @@
           game-state
           player-actions))
 
+(defrecord NimView [state player-id]
+  view/T
+  (player-id [this] player-id)
+  ;; we can use the game-state methods because it's a perfect information game.
+  (a-legal-move [this]
+    (state/a-legal-move state player-id))
+  (terminal? [this]
+             (state/terminal? state))
+  (score [this]
+         (state/score state player-id)))
+
 (defrecord NimGame [state]
-  Game
+  state/T
   ; two players named 0 and 1
   (all-players [this] [0 1])
   ; perfect information -- view is full game state.
-  (view [this _] state)
+  (view [this player-id] (NimView. this player-id))
   ; actions are :no-op and {1, 2, 3} (number of stones taken).
-  (legal-actions [this player-id]
+  (legal-action [this player-id action]
     (if (= player-id (:active state))
-      (set (range 1 (inc (min stones-per-turn-limit (:stones state)))))
-      #{:no-op}))
+      (and (integer? action)
+           (>= action 1)
+           (<= action stones-per-turn-limit)
+           (<= action (:stones state)))
+      (= action :no-op)))
+  (a-legal-move [this player-id]
+    (if (= player-id (:active state))
+      (inc (rand-int (min stones-per-turn-limit (:stones state))))
+      :no-op))
   ; a Nim move is to take stones off the board.
   (move [this player-actions]
     (NimGame. (nim-move state player-actions)))
@@ -47,4 +66,5 @@
 (def Spec
   {:new make-NimGame
    :n-players [2]
-   :impl NimGame})
+   :impl NimGame
+   :view-impl NimView})
