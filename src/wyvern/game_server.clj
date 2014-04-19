@@ -28,10 +28,11 @@
 ;; TODO: legal-move determination should be a method of the GameView, not Game (players
 ;; don't have access to the full game state). 
 (defn run-player-actions [game player-fns]
-  (map (fn [[player-id action-fn]]
-         [player-id (action-fn (view game player-id)
-                               (legal-actions game player-id))])
-       player-fns))
+  (into {}
+        (map (fn [[player-id action-fn]]
+               [player-id (action-fn (view game player-id)
+                                     (legal-actions game player-id))])
+             player-fns)))
 
 (defn check-player-actions [game actions]
   (every? (fn [[player-id action]]
