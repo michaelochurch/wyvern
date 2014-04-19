@@ -29,13 +29,22 @@
   (legal-actions [this player-id]
     (if (= player-id (:active state))
       (range 1 (min (inc stones-per-turn-limit) (:stones state)))
-      :no-op))
+      [:no-op]))
   ; a Nim move is to take stones off the board.
   (move [this player-actions]
-    (nim-move state player-actions))
+    (NimGame. (nim-move state player-actions)))
   ; game ends when no stones are left. 
   (terminal? [this]
     (= (:stones state) 0))
   ; active player at game end is loser (score = 0.0) and other wins (1.0).
   (score [this player-id]
     (if (= (:active state) player-id) 0.0 1.0)))
+
+(defn make-NimGame [& [stones]]
+  (let [stones (or stones 16)]
+    (NimGame. (State. 0 stones))))
+
+(def Spec
+  {:new make-NimGame
+   :players 2
+   :impl NimGame})
