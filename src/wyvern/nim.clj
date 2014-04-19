@@ -28,8 +28,8 @@
   ; actions are :no-op and {1, 2, 3} (number of stones taken).
   (legal-actions [this player-id]
     (if (= player-id (:active state))
-      (range 1 (min (inc stones-per-turn-limit) (:stones state)))
-      [:no-op]))
+      (set (range 1 (inc (min stones-per-turn-limit (:stones state)))))
+      #{:no-op}))
   ; a Nim move is to take stones off the board.
   (move [this player-actions]
     (NimGame. (nim-move state player-actions)))
@@ -46,5 +46,5 @@
 
 (def Spec
   {:new make-NimGame
-   :players 2
+   :n-players [2]
    :impl NimGame})
