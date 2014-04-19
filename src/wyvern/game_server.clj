@@ -1,14 +1,12 @@
 (ns wyvern.game-server
-  (:require wyvern.nim)
-  (:use wyvern.types))
+  (:require wyvern.nim
+            [wyvern.game-state :as state]
+            [wyvern.game-view :as view]))
 
 (def ^:dynamic *verbose* false)
 
 (defn set-verbose [x]
   (alter-var-root #'*verbose* (fn [_] x)))
-
-(defn random-legal-play [view action-list]
-  (first (shuffle action-list)))
 
 (defn default-player-ids [n-players]
   (into [] (range n-players)))
@@ -16,7 +14,8 @@
 (defn default-player-fns [player-ids]
   (into {}
         (map (fn [id]
-               [id random-legal-play])
+               [id (fn [view]
+                     (view/a-legal-move view))])
              player-ids)))
 
 (defn default-on-view [player-ids]
@@ -30,13 +29,12 @@
 (defn run-player-actions [game player-fns]
   (into {}
         (map (fn [[player-id action-fn]]
-               [player-id (action-fn (view game player-id)
-                                     (legal-actions game player-id))])
+               [player-id (action-fn (state/view game player-id))])
              player-fns)))
 
 (defn check-player-actions [game actions]
   (every? (fn [[player-id action]]
-            (contains? (legal-actions game player-id) action))
+            (state/legal-action game player-id action))
           actions))
 
 ;; TODO: this will need to fail more gracefully. 
@@ -48,22 +46,22 @@
                        (default-player-ids (first (:n-players game-spec))))
         player-fns (or player-fns
                        (default-player-fns player-ids))
-        on-view    (or on-view
+       on-view    (or on-view
                        (default-on-view player-ids))]
     (loop [game ((:new game-spec) game-config)]
       ;; Any view-based side effects happen each turn. 
       (doseq [[player-id on-view-fn] on-view]
-        (on-view-fn (view game player-id)))
+        (on-view-fn (state/view game player-id)))
       
-      (if (terminal? game)
-        (all-scores game)
+      (if (state/terminal? game)
+        (state/all-scores game)
         (let [actions (run-player-actions game player-fns)]
           (when *verbose*
             (doseq [[player-id action] actions]
               (printf "Action of Player %s is %s\n" player-id action)))
 
           (if (check-player-actions game actions)
-            (recur (move game actions))
+            (recur (state/move game actions))
             (illegal-action actions)))))))
 
 (defn nim-test []
