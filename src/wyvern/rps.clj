@@ -2,6 +2,8 @@
   (:use wyvern.types
         wyvern.utils))
 
+;; Currently broken (due to interface changes around views). 
+
 (def ^:const default-play-upto 5)
 
 (defrecord State [points play-upto])
