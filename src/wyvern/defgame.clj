@@ -7,7 +7,8 @@
 (defn- nil-values [coll]
   (into {} (map (fn [k] [k nil]) coll)))
 
-(defmacro defgame [name & {:keys [constants defaults fields legal legal-1 terminal? score]}]
+(defmacro defgame [name & {:keys [constants defaults fields 
+                                  legal legal-1 move terminal? score]}]
   (let [all-names-used (concat fields (keys defaults) (keys constants))]
     `(def ~name 
        {:init ~(let [base (merge (keywordize-map (nil-values fields))
@@ -27,7 +28,10 @@
                  ~legal-1)
 
         :view :not-impl
-        :move :not-impl
+        :move (fn [{:keys [~@all-names-used] 
+                    :as ~(symbol nil "$game-state")}
+                   ~(symbol nil "$actions")]
+                ~move)
 
         :terminal? (fn [{:keys [~@all-names-used]
                          :as ~(symbol nil "$game-state")}]
@@ -44,7 +48,7 @@
         (false? x)   0.0
         :else (throw (IllegalArgumentException. "type error in double-convert-wrapper"))))
 
-(defgame make-instance [game-spec]
+(defn make-instance [game-spec]
   ;; Creates a "runnable" instance of the game. 
   )
                               
