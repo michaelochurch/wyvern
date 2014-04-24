@@ -2,7 +2,7 @@
 
 (comment
 (defgame nim
-  :players 2
+  :players [2]
   :fields  [active-player stones-left]
   :const-fields {max-stones 3}
   :defaults {:active-player 0
@@ -22,9 +22,10 @@
 
 (comment
 (defgame hearts
-  :players 4
+  :players [4]
+  :random true ;; creates a 5th player ID for :random  
   :fields [... hands ...]
-  :visible {:hands (fn [player-id] (get hands player-id)})
+  :visible {:hands (get hands $player-id)}
                    ;; true means the field is visible, false means it's omitted, 
                    ;; a function allows partial visibility (e.g. that player's hand).
 )
