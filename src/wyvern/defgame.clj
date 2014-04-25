@@ -4,14 +4,15 @@
 (defn- keywordize-map [m]
   (into {} (map (fn [[k v]] [(keyword nil (name k)) v]) m)))
 
-(defn- nil-values [coll]
+(defn- nil-valued-map [coll]
   (into {} (map (fn [k] [k nil]) coll)))
 
-(defmacro defgame [name & {:keys [constants defaults fields 
+(defmacro defgame [name & {:keys [n-players constants defaults fields view
                                   legal legal-1 move terminal? score]}]
   (let [all-names-used (concat fields (keys defaults) (keys constants))]
     `(def ~name 
-       {:init ~(let [base (merge (keywordize-map (nil-values fields))
+       {:n-players ~n-players
+        :init ~(let [base (merge (keywordize-map (nil-valued-map fields))
                                  (keywordize-map defaults)
                                  (keywordize-map constants))]
                  (fn [& [config]] (merge base config)))
@@ -27,7 +28,11 @@
                       ~(symbol nil "$player-id")]
                  ~legal-1)
 
-        :view :not-impl
+        :view (fn [{:keys [~@all-names-used]
+                    :as ~(symbol nil "$game-state")}
+                   ~(symbol nil "$player-id")]
+                ~view)
+
         :move (fn [{:keys [~@all-names-used] 
                     :as ~(symbol nil "$game-state")}
                    ~(symbol nil "$actions")]
@@ -58,7 +63,6 @@
       :active-player (rem (inc active-player) 2)
       :stones-left   (- stones-left (get actions active-player)))))
 
-
 ;; TODO: in practice, it will be rare that core functions like :legal, :move are
 ;; written inline in the defgame. They'll usually be declared externally. I want
 ;; to support both forms, e.g.:
@@ -68,12 +72,11 @@
 ;; `` :legal nim-legal `` ~= `` :legal (nim-legal $game-state $player-id $action) ``
 
 (defgame nim
-  :players [2]
+  :n-players [2]
   :fields  [active-player stones-left]
   :defaults {:active-player 0
              :stones-left   16}
-  :visible  {:active-player true
-             :stones-left   true}
+  :view      $game-state           ;; perfect information
   :constants {max-stones 3}
   :legal     (if (= $player-id active-player)
                (and (number? $action)
