@@ -7,6 +7,11 @@
 (defn- nil-valued-map [coll]
   (into {} (map (fn [k] [k nil]) coll)))
 
+;; NOTE: the game contract requires that :legal and :legal-1 perform identically
+;; on views-- returned by (:view <game-state> <player-id>)-- as on the game
+;; state. This means that a View must contain enough information that the player
+;; can tell if an action is legal.
+
 (defmacro defgame [name & {:keys [n-players constants defaults fields view
                                   legal legal-1 move terminal? score]}]
   (let [all-names-used (concat fields (keys defaults) (keys constants))]
