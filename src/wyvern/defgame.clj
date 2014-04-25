@@ -52,10 +52,6 @@
         (true?  x)   1.0
         (false? x)   0.0
         :else (throw (IllegalArgumentException. "type error in double-convert-wrapper"))))
-
-(defn make-instance [game-spec]
-  ;; Creates a "runnable" instance of the game. 
-  )
                               
 (defn nim-move [game-state actions]
   (let [{:keys [active-player stones-left]} game-state]
