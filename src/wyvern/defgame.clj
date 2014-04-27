@@ -81,10 +81,10 @@
   :constants {max-stones 3}
   :legal     (if (= $player-id active-player)
                (and (number? $action)
-                    (<= 1 $action (max max-stones stones-left)))
+                    (<= 1 $action (min max-stones stones-left)))
                (= $action :no-op))
   :legal-1   (if (= $player-id active-player)
-               (inc (rand-int (max max-stones stones-left)))
+               (inc (rand-int (min max-stones stones-left)))
                :no-op)
   :move      (nim-move $game-state $actions)
   :terminal? (= stones-left 0)
