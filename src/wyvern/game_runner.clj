@@ -49,21 +49,34 @@
               (check player-id action))
             actions)))
 
+;; TODO: calls like `move` should work on game and game-instance. (multimethods)
+
 (defn run-game-instance-one-step [game-instance]
-  (let [actions (run-player-actions game-instance)
-        new-state ((get-in game-instance [:game :move]) 
-                   (:state game-instance) actions)]
+  ;; 1. Execute any on-view functions for players.
+  (doseq [[player-id on-view-fn] (:on-view game-instance)]
+    (on-view-fn ((get-in game-instance [:game :view]) (:state game-instance) player-id)))
+
+  (let [actions (run-player-actions game-instance)]
+    ;; 2. Legality check.
     (when-not (check-player-actions game-instance actions)
       (throw (Exception. (format "run-game-instance-one-step: received illegal actions"))))
-    (update game-instance :state (fn [_] new-state)
-            :history #(conj % [actions new-state]))))
+
+    ;; 3. When *verbose*, print out the actions taken.
+    (when *verbose*
+      (doseq [[player-id action] actions]
+        (printf "Action of Player %s is %s\n" player-id action)))
+
+    ;; 4. Return game-instance with updated :state and :history.
+    (let [new-state ((get-in game-instance [:game :move])
+                     (:state game-instance) actions)]
+      (update game-instance :state (fn [_] new-state)
+              :history #(conj % [actions new-state])))))
 
 (defn terminal-check [game-instance]
   ((get-in game-instance [:game :terminal?]) (get game-instance :state)))
-   
+
 (defn run-game-instance [game-instance]
   (loop [gi game-instance]
     (if (terminal-check gi)
       gi
       (recur (run-game-instance-one-step gi)))))
-
