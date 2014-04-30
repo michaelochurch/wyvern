@@ -33,4 +33,33 @@
   :move      (nim-move $game-state $actions)
   :terminal? (= stones-left 0)
   :score     (not= $player-id active-player)) ;; true ~= 1.0, false ~= 0.0
-                                              ;; this allows a "win condition" to be the API
+
+(def rps-outcome
+  {[:rock :rock]         :draw
+   [:rock :scissors]     :win-0
+   [:rock :paper]        :win-1
+   [:scissors :rock]     :win-1
+   [:scissors :scissors] :draw
+   [:scissors :paper]    :win-0
+   [:paper :rock]        :win-0
+   [:paper :scissors]    :win-1
+   [:paper :paper]       :draw})
+
+(defn rps-move [game-state player-actions]
+  (let [result (rps-outcome [(player-actions 0) (player-actions 1)])]
+    (case result
+      :draw game-state
+      :win-0 (update-in game-state [:points 0] inc)
+      :win-1 (update-in game-state [:points 1] inc))))
+
+(defgame rock-paper-scissors
+  :n-players [2]
+  :fields [points]
+  :defaults {:points [0 0]}
+  :view $game-state
+  :constants {:play-until 5}
+  :legal (some #{$action} [:rock :scissors :paper])
+  :legal-1 (nth [:rock :scissors :paper] (rand-int 3))
+  :move (rps-move $game-state $actions)
+  :terminal? (some #(>= % play-until) points)
+  :score points)
