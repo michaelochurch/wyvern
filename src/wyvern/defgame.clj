@@ -1,13 +1,13 @@
 (ns wyvern.defgame
   (:use wyvern.utils))
 
-(defn- keywordize-map [m]
+(defn keywordize-map [m]
   (into {} (map (fn [[k v]] [(keyword nil (name k)) v]) m)))
 
-(defn- nil-valued-map [coll]
+(defn nil-valued-map [coll]
   (into {} (map (fn [k] [k nil]) coll)))
 
-(defn- double-convert-wrapper [x]
+(defn double-convert-wrapper [x]
   (cond (number? x)  (double x)
         (true?  x)   1.0
         (false? x)   0.0
