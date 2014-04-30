@@ -1,6 +1,9 @@
 (ns wyvern.game-runner
   (:use wyvern.utils))
 
+;; TODO: when the needs of this module are clearer, replace explicit keyword
+;; accesses with prototype methods or multimethods.
+
 (def ^:dynamic *verbose* false)
 
 (defn set-verbose [x]
