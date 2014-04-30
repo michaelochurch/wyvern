@@ -83,3 +83,7 @@
     (if (terminal-check gi)
       gi
       (recur (run-game-instance-one-step gi)))))
+
+(defn run-game [game]
+  (binding [*verbose* true]
+    (run-game-instance (game-instance game))))
